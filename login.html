@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Índice de Crédito FIDC — Acesso</title>
+<style>
+  :root { --c-bg:#F6F4F0; --c-surface:#FFFFFF; --c-border:#DDD9D1; --c-text:#111420; --c-text-2:#5C6048; --c-destaque:#515A36; }
+  @media (prefers-color-scheme: dark) {
+    :root { --c-bg:#14161C; --c-surface:#1C1F27; --c-border:#2E323C; --c-text:#F1EFEA; --c-text-2:#B8BCA8; --c-destaque:#8FA06B; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--c-bg); color: var(--c-text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .caixa { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 10px; padding: 32px; width: 100%; max-width: 340px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  p { font-size: 13px; color: var(--c-text-2); margin: 0 0 20px; }
+  input { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid var(--c-border); border-radius: 6px; background: var(--c-bg); color: var(--c-text); margin-bottom: 12px; }
+  button { width: 100%; padding: 10px 12px; font-size: 14px; font-weight: 600; border: none; border-radius: 6px; background: var(--c-destaque); color: #fff; cursor: pointer; }
+  .erro { color: #c0392b; font-size: 12px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+<div class="caixa">
+  <h1>Índice de Crédito FIDC</h1>
+  <p>Acesso restrito — informe a senha pra entrar.</p>
+  <form id="form-senha">
+    <input type="password" id="campo-senha" placeholder="Senha" autofocus>
+    <button type="submit">Entrar</button>
+    <div class="erro" id="erro-senha">Senha incorreta.</div>
+  </form>
+</div>
+<script>
+// Aviso: isso é um gate COSMÉTICO, não segurança de verdade — qualquer pessoa
+// que veja o código-fonte desta página consegue ler o hash abaixo. Serve só
+// pra afastar acesso casual, não pra proteger dado confidencial de verdade.
+var HASH_ESPERADO = '43d8f36a6c410f8a0bc568f1451674cc8510bd38bf678a81516e16243fb7f17e';
+document.getElementById('form-senha').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var senha = document.getElementById('campo-senha').value;
+  crypto.subtle.digest('SHA-256', new TextEncoder().encode(senha)).then(function (buf) {
+    var hash = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    if (hash === HASH_ESPERADO) {
+      sessionStorage.setItem('fidc_auth', 'ok');
+      location.href = 'index.html';
+    } else {
+      document.getElementById('erro-senha').style.display = 'block';
+    }
+  });
+});
+</script>
+</body>
+</html>

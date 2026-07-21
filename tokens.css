@@ -1,0 +1,286 @@
+/* Design tokens — Índice de Crédito FIDC (Seção 5 do doc).
+   Claro é o padrão declarado no doc; escuro é derivação própria (doc não dá
+   valores hex de escuro, só exige "implementar por completo ou não implementar
+   — nada de suporte parcial"). Alternância via [data-theme] no <html>, plus
+   prefers-color-scheme como sinal inicial. */
+
+:root {
+  --c-bg: #F6F4F0;
+  --c-surface: #FFFFFF;
+  --c-border: #DDD9D1;
+  --c-text: #111420;
+  --c-text-2: #5C6048;
+  --c-destaque: #515A36;
+  --c-acento: #C4A355;
+  --c-ok: #2C7A56;
+  --c-bad: #9B2C2C;
+  --c-warn: #9B7A32;
+
+  --c-classe-senior: #3B3330;
+  --c-classe-mezanino: #7A5A3A;
+  --c-classe-subordinada: #565862;
+
+  /* Tooltip: fundo escuro sólido + texto branco SEMPRE, nos dois temas. */
+  --tooltip-bg: #1C1F27;
+  --tooltip-text: #FFFFFF;
+
+  --radius-card: 6px;
+  --radius-sm: 3px;
+  --radius-filter: 2px;
+
+  --font-principal: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --skeleton-base: #EAE7E0;
+  --skeleton-shine: #F6F4F0;
+}
+
+:root[data-theme="dark"] {
+  --c-bg: #14161C;
+  --c-surface: #1C1F27;
+  --c-border: #2E323C;
+  --c-text: #F1EFEA;
+  --c-text-2: #B8BCA8;
+  --c-destaque: #8FA06B;
+  --c-acento: #D4B876;
+  --c-ok: #4CAF7D;
+  --c-bad: #D65C5C;
+  --c-warn: #D6A94C;
+
+  --c-classe-senior: #C9BEB8;
+  --c-classe-mezanino: #D9B98A;
+  --c-classe-subordinada: #A8ABB5;
+
+  --skeleton-base: #262A33;
+  --skeleton-shine: #30343F;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-bg: #14161C;
+    --c-surface: #1C1F27;
+    --c-border: #2E323C;
+    --c-text: #F1EFEA;
+    --c-text-2: #B8BCA8;
+    --c-destaque: #8FA06B;
+    --c-acento: #D4B876;
+    --c-ok: #4CAF7D;
+    --c-bad: #D65C5C;
+    --c-warn: #D6A94C;
+
+    --c-classe-senior: #C9BEB8;
+    --c-classe-mezanino: #D9B98A;
+    --c-classe-subordinada: #A8ABB5;
+
+    --skeleton-base: #262A33;
+    --skeleton-shine: #30343F;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-principal);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  /* clip, não hidden/auto: overflow-x != visible em QUALQUER eixo já basta pra
+     o elemento virar "scroll container" aos olhos do position:sticky dos
+     filhos — com hidden/auto em html E body ao mesmo tempo, o body vira um
+     scroll container inerte (nunca chega a rolar de verdade, quem rola é o
+     html/document), e todo position:sticky filho de body passa a computar
+     sua posição travada contra o scrollTop do body (sempre 0) em vez do
+     scroll real da página — na prática, sticky vira um static disfarçado.
+     clip não cria essa "capacidade de scroll" (é só recorte visual), então
+     não quebra sticky. Bug real, achado ao testar .filtros-pagina sticky. */
+  overflow-x: clip;
+}
+
+body {
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  font-weight: 700;
+  margin: 0 0 0.5em;
+}
+
+h4, .rotulo-forte {
+  font-weight: 600;
+}
+
+a {
+  color: var(--c-destaque);
+}
+
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+
+.elemento-pequeno {
+  border-radius: var(--radius-sm);
+}
+
+button {
+  font-family: inherit;
+}
+
+.botao-filtro {
+  border-radius: var(--radius-filter);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-filtro[aria-pressed="true"] {
+  background: var(--c-destaque);
+  border-color: var(--c-destaque);
+  color: #FFFFFF;
+}
+
+.botao-filtro:focus-visible {
+  outline: 2px solid var(--c-acento);
+  outline-offset: 2px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+th, td {
+  border-bottom: 1px solid var(--c-border);
+  padding: 6px 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+th:first-child, td:first-child {
+  text-align: left;
+}
+
+thead th {
+  color: var(--c-text-2);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.lista-fontes {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--c-text-2);
+  line-height: 1.5;
+}
+
+.rodape-nota {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--c-text-2);
+}
+
+.valor-ok { color: var(--c-ok); }
+.valor-bad { color: var(--c-bad); }
+.valor-warn { color: var(--c-warn); }
+
+/* ---------- Tooltip (fixo, sempre escuro nos dois temas) ---------- */
+
+.tooltip-grafico {
+  position: fixed;
+  z-index: 1000;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 270px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.tooltip-grafico.visivel {
+  opacity: 1;
+}
+
+/* ---------- Skeleton (carregamento — nunca tela em branco) ---------- */
+
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 37%, var(--skeleton-base) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shine 1.4s ease infinite;
+}
+
+@keyframes skeleton-shine {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ---------- Estados sem-dado / erro ---------- */
+
+.estado-mensagem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  color: var(--c-text-2);
+  font-size: 13px;
+  text-align: center;
+  padding: 16px;
+}
+
+.estado-mensagem.erro {
+  color: var(--c-bad);
+}
+
+/* ---------- Responsivo: sem scroll horizontal em 375px ---------- */
+
+.container-app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  width: 100%;
+}
+
+.grade-graficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .container-app {
+    padding: 8px;
+  }
+  .grade-graficos {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grafico-canvas-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.grafico-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

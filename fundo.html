@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<script>
+(function () {
+  try {
+    if (sessionStorage.getItem('fidc_auth') !== 'ok') { location.replace('login.html'); }
+  } catch (e) {}
+})();
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Índice de Crédito FIDC — Perfil de Fundo</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .cabecalho { position: sticky; top: 0; z-index: 100; background: var(--c-bg); border-bottom: 1px solid var(--c-border); }
+  .cabecalho-topo { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; max-width: 1200px; margin: 0 auto; gap: 16px; flex-wrap: wrap; }
+  .cabecalho-titulo { font-size: 16px; font-weight: 700; }
+  .cabecalho-subtitulo { font-size: 12px; color: var(--c-text-2); font-weight: 400; }
+  .botao-tema { border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text); border-radius: var(--radius-filter); width: 32px; height: 32px; cursor: pointer; font-size: 15px; line-height: 1; flex-shrink: 0; }
+  .busca-wrap { position: relative; flex: 1 1 320px; max-width: 480px; }
+  #busca-fundo { width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--c-surface); color: var(--c-text); font-family: inherit; }
+  #lista-sugestoes { position: absolute; top: 100%; left: 0; right: 0; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-sm); max-height: 320px; overflow-y: auto; z-index: 300; display: none; }
+  #lista-sugestoes.aberta { display: block; }
+  .sugestao { padding: 8px 12px; font-size: 12px; cursor: pointer; border-bottom: 1px solid var(--c-border); }
+  .sugestao:last-child { border-bottom: none; }
+  .sugestao:hover, .sugestao.ativa { background: var(--c-bg); }
+  .sugestao .cnpj { color: var(--c-text-2); font-size: 11px; }
+  .container-app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-card); padding: 14px; }
+  .grade-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .info-rotulo { font-size: 11px; color: var(--c-text-2); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
+  .info-valor { font-size: 14px; font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge-ok { background: var(--c-ok, #2C7A56); color: #fff; }
+  .badge-bad { background: var(--c-bad, #9B2C2C); color: #fff; }
+  .badge-neutro { background: var(--c-border); color: var(--c-text-2); }
+  .secao-titulo { font-size: 13px; font-weight: 700; color: var(--c-text-2); text-transform: uppercase; letter-spacing: .03em; margin: 24px 0 10px; }
+  .secao-titulo:first-child { margin-top: 0; }
+  .grade-graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; }
+  .grafico-titulo { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--c-text-2); }
+  .grafico-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-card); padding: 12px; }
+  .grafico-canvas-wrap { position: relative; width: 100%; height: 220px; }
+  .grafico-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+  .linha-elegibilidade { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .linha-elegibilidade .rotulo { flex: 0 0 220px; font-size: 12px; color: var(--c-text-2); }
+  .tira-meses { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+  .celula-mes { width: 20px; height: 18px; border-radius: 3px; flex-shrink: 0; }
+  .celula-ok { background: var(--c-ok, #2C7A56); }
+  .celula-bad { background: var(--c-bad, #9B2C2C); }
+  .celula-vazia { background: var(--c-border); }
+  .estado-vazio { text-align: center; padding: 60px 20px; color: var(--c-text-2); }
+  .tabela-segmentos { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tabela-segmentos th, .tabela-segmentos td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--c-border); }
+  .tabela-segmentos th { color: var(--c-text-2); font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="cabecalho">
+  <div class="cabecalho-topo">
+    <div>
+      <div class="cabecalho-titulo">Índice de Crédito FIDC</div>
+      <div class="cabecalho-subtitulo">Perfil de Fundo</div>
+    </div>
+    <div class="busca-wrap">
+      <input type="text" id="busca-fundo" placeholder="Buscar fundo por nome ou CNPJ…" autocomplete="off">
+      <div id="lista-sugestoes"></div>
+    </div>
+    <button class="botao-tema" id="botao-tema" aria-label="Alternar tema claro/escuro" title="Alternar tema">◐</button>
+  </div>
+</header>
+<main class="container-app" id="conteudo-principal">
+  <div class="estado-vazio">Busque um fundo pelo nome ou CNPJ acima pra ver o perfil completo.</div>
+</main>
+
+<script src="charts.js"></script>
+<script src="fundo_app.js"></script>
+</body>
+</html>

@@ -19,6 +19,9 @@
   .cabecalho-titulo { font-size: 16px; font-weight: 700; }
   .cabecalho-subtitulo { font-size: 12px; color: var(--c-text-2); font-weight: 400; }
   .botao-tema { border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text); border-radius: var(--radius-filter); width: 32px; height: 32px; cursor: pointer; font-size: 15px; line-height: 1; flex-shrink: 0; }
+  .cabecalho-esquerda { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .botao-menu { border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text-2); border-radius: var(--radius-filter); padding: 6px 12px; font-size: 12px; font-weight: 600; line-height: 1; text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+  .botao-menu:hover { border-color: var(--c-destaque); color: var(--c-text); }
   .busca-wrap { position: relative; flex: 1 1 320px; max-width: 480px; }
   #busca-fundo { width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--c-surface); color: var(--c-text); font-family: inherit; }
   #lista-sugestoes { position: absolute; top: 100%; left: 0; right: 0; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-sm); max-height: 320px; overflow-y: auto; z-index: 300; display: none; }
@@ -59,9 +62,12 @@
 <body>
 <header class="cabecalho">
   <div class="cabecalho-topo">
-    <div>
-      <div class="cabecalho-titulo">Índice de Crédito FIDC</div>
-      <div class="cabecalho-subtitulo">Perfil de Fundo</div>
+    <div class="cabecalho-esquerda">
+      <a class="botao-menu" href="index.html" title="Voltar ao menu">← Menu</a>
+      <div>
+        <div class="cabecalho-titulo">Índice de Crédito FIDC</div>
+        <div class="cabecalho-subtitulo">Perfil de Fundo</div>
+      </div>
     </div>
     <div class="busca-wrap">
       <input type="text" id="busca-fundo" placeholder="Buscar fundo por nome ou CNPJ…" autocomplete="off">

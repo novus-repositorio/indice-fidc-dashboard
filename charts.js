@@ -577,8 +577,12 @@
 
     const { ctx, w, h } = preparaCanvas(canvas);
     const totais = categorias.map((_, i) => series.reduce((acc, s) => acc + (s.pontos[i] || 0), 0));
+    // cemPorcento NUNCA leva o padding de 8% que os gráficos de valor absoluto
+    // levam — 100% já É o teto natural e significativo do domínio; um padding
+    // de 2% fazia a régua de 4 passos (desenhaEixos) terminar em 102% (bug
+    // real: eixo Y mostrando "mais de 100%" num gráfico de composição/total).
     const yMax = cemPorcento ? 1 : Math.max(maxArr(totais), 1);
-    const dominioY = [0, cemPorcento ? 1.02 : yMax * 1.08];
+    const dominioY = [0, cemPorcento ? 1 : yMax * 1.08];
 
     const { escX, escY, margem } = desenhaEixos(ctx, w, h, categorias, dominioY, formatoY);
     desenhaLegenda(ctx, w, series.map((s) => ({ label: s.label, cor: s.cor })), margem.left);
@@ -1128,6 +1132,91 @@
     canvas.onmouseleave = esconderTooltip;
   }
 
+  // Barra empilhada HORIZONTAL (categoria no eixo Y, valor no eixo X) — pra
+  // composição por categoria (ex. Sênior/Mezanino/Subordinada por Tipo de
+  // Ativo) quando os NOMES das categorias são longos e/ou numerosos demais
+  // pra caber no eixo X de uma barra vertical comum (mesmo motivo de
+  // boxplotHorizontal/barraHorizontalComRotulo). cemPorcento (sempre true
+  // no uso atual) normaliza cada linha pra fração de 0-100%, igual
+  // barrasEmpilhadas — só muda a orientação dos eixos.
+  function barrasEmpilhadasHorizontal(canvas, opts) {
+    canvas._ultimoDesenho = { tipo: 'barrasEmpilhadasHorizontal', opts };
+    const { categorias, series: seriesOriginais, cemPorcento } = opts;
+    let formatoValor = opts.formatoValor;
+    const temDado = categorias.length && seriesOriginais.some((s) => s.pontos.some((v) => v));
+    if (!temDado) return semDados(canvas);
+    comDados(canvas);
+
+    let series = seriesOriginais;
+    if (cemPorcento) {
+      const totaisOriginais = categorias.map((_, i) => seriesOriginais.reduce((acc, s) => acc + (s.pontos[i] || 0), 0));
+      series = seriesOriginais.map((s) => ({
+        ...s,
+        pontos: s.pontos.map((v, i) => (totaisOriginais[i] > 0 ? (v || 0) / totaisOriginais[i] : 0)),
+      }));
+      if (!formatoValor) formatoValor = (v) => (v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%';
+    }
+
+    const { ctx, w, h } = preparaCanvas(canvas);
+    const margem = margemPadrao();
+    margem.top += 24; // espaço pra legenda
+    const maiorRotulo = categorias.reduce((max, c) => Math.max(max, c.length * 6.5), 0);
+    margem.left = Math.max(margem.left, maiorRotulo + 12);
+
+    desenhaLegenda(ctx, w, series.map((s) => ({ label: s.label, cor: s.cor })), margem.left);
+
+    const xMax = cemPorcento ? 1 : Math.max(maxArr(categorias.map((_, i) => series.reduce((acc, s) => acc + (s.pontos[i] || 0), 0))), 1);
+    const escX = escalaLinear([0, cemPorcento ? 1 : xMax * 1.08], [margem.left, w - margem.right]);
+    const escY = escalaLinear([0, categorias.length - 1], [margem.top + 10, h - margem.bottom]);
+
+    // Réguas verticais (0/25/50/75/100% ou 4 passos lineares) + rótulos.
+    const passosX = 4;
+    ctx.font = '11px ' + corToken('--font-principal');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let i = 0; i <= passosX; i++) {
+      const valor = (cemPorcento ? 1 : xMax * 1.08) * (i / passosX);
+      const x = escX(valor);
+      ctx.strokeStyle = corToken('--c-border', 0.5);
+      ctx.beginPath();
+      ctx.moveTo(x, margem.top);
+      ctx.lineTo(x, h - margem.bottom);
+      ctx.stroke();
+      ctx.fillStyle = corToken('--c-text-2');
+      ctx.fillText((formatoValor || formataPadrao)(valor), x, h - margem.bottom + 6);
+    }
+
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    const alturaBarra = Math.max(10, ((h - margem.top - margem.bottom) / categorias.length) * 0.6);
+
+    categorias.forEach((cat, i) => {
+      const y = escY(i);
+      ctx.fillStyle = corToken('--c-text-2');
+      ctx.fillText(cat, margem.left - 8, y);
+
+      let acumulado = 0;
+      series.forEach((s) => {
+        const v = s.pontos[i] || 0;
+        const xBase = escX(acumulado);
+        const xTopo = escX(acumulado + v);
+        ctx.fillStyle = s.cor;
+        ctx.fillRect(xBase, y - alturaBarra / 2, xTopo - xBase, alturaBarra);
+        acumulado += v;
+      });
+    });
+
+    canvas.onmousemove = (ev) => {
+      const rect = canvas.getBoundingClientRect();
+      const yLocal = ev.clientY - rect.top;
+      const idx = Math.round(escalaLinear([margem.top + 10, h - margem.bottom], [0, categorias.length - 1])(yLocal));
+      const idxClamped = Math.max(0, Math.min(categorias.length - 1, idx));
+      const linhas = series.map((s) => `${s.label}: ${(formatoValor || formataPadrao)(s.pontos[idxClamped] || 0)}`).join('<br>');
+      mostrarTooltip(`<strong>${categorias[idxClamped]}</strong><br>${linhas}`, ev.clientX, ev.clientY);
+    };
+    canvas.onmouseleave = esconderTooltip;
+  }
+
   // ---------- heatmap ----------
 
   function _corEscalaContinua(t, negativo) {
@@ -1374,6 +1463,7 @@
     histograma,
     boxplotHorizontal,
     barraHorizontalComRotulo,
+    barrasEmpilhadasHorizontal,
     heatmap,
     scatter,
   };
@@ -1402,6 +1492,7 @@
     histograma,
     boxplotHorizontal,
     barraHorizontalComRotulo,
+    barrasEmpilhadasHorizontal,
     heatmap,
     scatter,
     regressaoLinearJs,
